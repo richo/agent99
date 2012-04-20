@@ -31,7 +31,7 @@ module IrcMachine
       end
 
       def parameters
-        data.build["parameters"]
+        @parameters ||= OpenStruct.new(data.build["parameters"])
       end
 
     end

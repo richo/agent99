@@ -30,12 +30,12 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
   attr_reader :settings
   def initialize(*args)
     @id = 0
-    @build_cache = {}
     @repos = Hash.new
     conf = load_config
 
     conf["builds"].each do |k, v|
       @repos[k] = OpenStruct.new(v)
+      @repos[k].builds = {}
     end
 
     @settings = OpenStruct.new(conf["settings"])
@@ -59,6 +59,12 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
     jenkins = ::IrcMachine::Models::JenkinsNotification.new(request.body.read)
 
     if repo = @repos[jenkins.repo_name]
+      commit = repo.builds[jenkins.parameters.id.to_sym]
+
+      commit.author_usernames.each do |author|
+        ircnick = USERNAME_MAPPING[author] || author
+        session.msg ircnick, "Build status of #{commit.branch} revision #{commit.after} changed to #{jenkins.status}"
+      end
 
     else
       not_found
@@ -69,7 +75,10 @@ private
 
   def trigger_build(repo, commit)
     uri = URI(repo.builder_url)
-    params = defaultParams(repo).merge ({SHA1: commit.after})
+    id = next_id
+    params = defaultParams(repo).merge ({SHA1: commit.after, ID: next_id})
+
+    repo.builds[id.to_sym] = commit
 
     commit.author_usernames.each do |author|
       ircnick = USERNAME_MAPPING[author] || author
@@ -89,6 +98,6 @@ private
   end
 
   def defaultParams(repo)
-    { token: repo.token, ID: next_id }
+    { token: repo.token }
   end
 end
