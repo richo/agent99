@@ -62,7 +62,7 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
     jenkins = ::IrcMachine::Models::JenkinsNotification.new(request.body.read)
 
     if repo = @repos[jenkins.repo_name]
-      commit = repo.builds[jenkins.parameters.id.to_s]
+      commit = repo.builds[jenkins.parameters.ID.to_s]
 
       message = "Build status of #{commit.branch} revision #{commit.after} changed to #{jenkins.status}"
       commit.author_usernames.each do |author|
