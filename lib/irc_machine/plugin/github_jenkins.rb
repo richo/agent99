@@ -35,8 +35,8 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
     super(*args)
   end
 
-  def build_branch
-    commit = Models::GithubNotification.new(request.body.read)
+  def build_branch(request, match)
+    commit = ::IrcMachine::Models::GithubNotification.new(request.body.read)
 
     if repo = @repos[commit.repo_name]
       trigger_build(repo, commit)
@@ -45,8 +45,8 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
     end
   end
 
-  def jenkins_status
-    jenkins = Models::JenkinsNotification.new(request.body.read)
+  def jenkins_status(request, match)
+    jenkins = ::IrcMachine::Models::JenkinsNotification.new(request.body.read)
 
     if repo = @repos[jenkins.repo_name]
 
@@ -58,8 +58,8 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
 private
 
   def trigger_build(repo, commit)
-    uri URI(repo.builder_url)
-    params = { SHA1: commit.after, ID: next_id }
+    uri = URI(repo.builder_url)
+    params = defaultParams(repo).merge ({SHA1: commit.after})
 
     uri.query = URI.encode_www_form(params)
     return Net::HTTP.get(uri).is_a? Net::HTTPSuccess
@@ -73,4 +73,7 @@ private
     @id += 1
   end
 
+  def defaultParams(repo)
+    { token: repo.token, ID: next_id }
+  end
 end
