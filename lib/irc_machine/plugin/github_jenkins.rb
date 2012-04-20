@@ -81,7 +81,7 @@ private
   def trigger_build(repo, commit)
     uri = URI(repo.builder_url)
     id = next_id
-    params = defaultParams(repo).merge ({SHA1: commit.after, ID: next_id})
+    params = defaultParams(repo).merge ({SHA1: commit.after, ID: id})
 
     repo.builds[id.to_s] = commit
 
