@@ -59,7 +59,7 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
     jenkins = ::IrcMachine::Models::JenkinsNotification.new(request.body.read)
 
     if repo = @repos[jenkins.repo_name]
-      commit = repo.builds[jenkins.parameters.id.to_sym]
+      commit = repo.builds[jenkins.parameters.id.to_s]
 
       commit.author_usernames.each do |author|
         ircnick = USERNAME_MAPPING[author] || author
@@ -78,7 +78,7 @@ private
     id = next_id
     params = defaultParams(repo).merge ({SHA1: commit.after, ID: next_id})
 
-    repo.builds[id.to_sym] = commit
+    repo.builds[id.to_s] = commit
 
     commit.author_usernames.each do |author|
       ircnick = USERNAME_MAPPING[author] || author
