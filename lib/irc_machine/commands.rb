@@ -34,5 +34,9 @@ module IrcMachine
       raw "PRIVMSG #{to} :#{text}"
     end
 
+    def notice(to, text)
+      raw "NOTICE #{to} :#{text}"
+    end
+
   end
 end

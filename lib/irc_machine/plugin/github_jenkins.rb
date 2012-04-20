@@ -61,6 +61,11 @@ private
     uri = URI(repo.builder_url)
     params = defaultParams(repo).merge ({SHA1: commit.after})
 
+    commit.author_usernames.each do |author|
+      ircnick = USERNAME_MAPPING[author] || author
+      session.notice ircnick, "Building #{commit.branch} revision #{commit.after}"
+    end
+
     uri.query = URI.encode_www_form(params)
     return Net::HTTP.get(uri).is_a? Net::HTTPSuccess
   end
