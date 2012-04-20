@@ -73,7 +73,7 @@ private
 
     commit.author_usernames.each do |author|
       ircnick = USERNAME_MAPPING[author] || author
-      session.msg settings.notify, "#{ircnick}: Building #{commit.branch} revision #{commit.after}"
+      session.msg ircnick, "Building #{commit.branch} revision #{commit.after}"
     end
 
     uri.query = URI.encode_www_form(params)
