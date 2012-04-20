@@ -35,6 +35,9 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
 
     conf["builds"].each do |k, v|
       @repos[k] = OpenStruct.new(v)
+      # Kludge until we go live with this
+      @repos["#{k}-ng"] = @repos[k]
+      # FIXME EPIC KLUDGE
       @repos[k].builds = {}
     end
 
