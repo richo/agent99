@@ -64,7 +64,15 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
     if repo = @repos[jenkins.repo_name]
       commit = repo.builds[jenkins.parameters.ID.to_s]
 
-      message = "Build status of #{commit.branch} revision #{commit.after} changed to #{jenkins.status}"
+      case commit.phase
+      when :STARTED
+        message = "Build of #{commit.branch} revision #{commit.after} started"
+      when :COMPLETE
+        message = "Build status of #{commit.branch} revision #{commit.after} changed to #{jenkins.status}"
+      else
+        return nil
+      end
+
       commit.author_usernames.each do |author|
         ircnick = USERNAME_MAPPING[author] || author
         session.msg ircnick, message
