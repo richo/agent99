@@ -61,10 +61,12 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
     if repo = @repos[jenkins.repo_name]
       commit = repo.builds[jenkins.parameters.id.to_s]
 
+      message = "Build status of #{commit.branch} revision #{commit.after} changed to #{jenkins.status}"
       commit.author_usernames.each do |author|
         ircnick = USERNAME_MAPPING[author] || author
-        session.msg ircnick, "Build status of #{commit.branch} revision #{commit.after} changed to #{jenkins.status}"
+        session.msg ircnick, message
       end
+      session.msg settings.notify, message
 
     else
       not_found
@@ -80,10 +82,12 @@ private
 
     repo.builds[id.to_s] = commit
 
+    message = "Building #{commit.branch} revision #{commit.after}"
     commit.author_usernames.each do |author|
       ircnick = USERNAME_MAPPING[author] || author
-      session.msg ircnick, "Building #{commit.branch} revision #{commit.after}"
+      session.msg ircnick, message
     end
+    session.msg settings.notify, message
 
     uri.query = URI.encode_www_form(params)
     return Net::HTTP.get(uri).is_a? Net::HTTPSuccess
