@@ -10,8 +10,7 @@ module IrcMachine
       attr_reader :data
 
       def initialize(body)
-        json = CGI.parse(body)["payload"][0]
-        @data = OpenStruct.new(JSON.parse(json))
+        @data = OpenStruct.new(JSON.parse(body))
       end
 
       def repo_name
