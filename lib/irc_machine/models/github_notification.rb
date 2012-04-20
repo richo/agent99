@@ -26,6 +26,14 @@ module IrcMachine
         data.ref.split("/").last
       end
 
+      def after
+        data.after
+      end
+
+      def before
+        data.before
+      end
+
       def authors
         data.commits.map{ |c| OpenStruct.new c["author"] }
       end
