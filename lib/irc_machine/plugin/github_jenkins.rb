@@ -7,9 +7,14 @@ require 'net/http'
 #
 # Then configuration in the .json file is
 # - {
-#     "reponame": {
-#       "builder_url": "URL GOES HERE",
-#       "token"      : "JENKINS_TOKEN",
+#     "settings": {
+#       "notify": "#builds"
+#     },
+#     "builds": {
+#       "reponame": {
+#         "builder_url": "URL GOES HERE",
+#         "token"      : "JENKINS_TOKEN",
+#       }
 #     }
 #   }
 #
@@ -22,13 +27,18 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
     "richoH" => "richo"
   }
 
+  attr_reader :settings
   def initialize(*args)
     @id = 0
     @build_cache = {}
     @repos = Hash.new
-    load_config.each do |k, v|
+    conf = load_config
+
+    conf["builds"].each do |k, v|
       @repos[k] = OpenStruct.new(v)
     end
+
+    @settings = OpenStruct.new(conf["settings"])
 
     route(:post, %r{^/github/jenkins$}, :build_branch)
     route(:post, %r{^/github/jenkins_status$}, :jenkins_status)
@@ -63,7 +73,7 @@ private
 
     commit.author_usernames.each do |author|
       ircnick = USERNAME_MAPPING[author] || author
-      session.notice ircnick, "Building #{commit.branch} revision #{commit.after}"
+      session.msg settings.notify, "#{ircnick}: Building #{commit.branch} revision #{commit.after}"
     end
 
     uri.query = URI.encode_www_form(params)
