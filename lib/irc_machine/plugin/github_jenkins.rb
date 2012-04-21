@@ -31,14 +31,12 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
   def initialize(*args)
     @id = 0
     @repos = Hash.new
+    @builds = Hash.new
     conf = load_config
 
     conf["builds"].each do |k, v|
       @repos[k] = OpenStruct.new(v)
       # Kludge until we go live with this
-      @repos["#{k}-ng"] = @repos[k]
-      # FIXME EPIC KLUDGE
-      @repos[k].builds = {}
     end
 
     @settings = OpenStruct.new(conf["settings"])
@@ -61,19 +59,17 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
   def jenkins_status(request, match)
     jenkins = ::IrcMachine::Models::JenkinsNotification.new(request.body.read)
 
-    if repo = @repos[jenkins.repo_name]
-      commit = repo.builds[jenkins.parameters.ID.to_s]
-
-      case commit.phase
+    if build = @builds[jenkins.parameters.ID.to_s]
+      case jenkins.phase
       when :STARTED
-        message = "Build of #{commit.branch} revision #{commit.after} started"
+        message = "Build of #{build.commit.branch} revision #{build.commit.after} started"
       when :COMPLETE
-        message = "Build status of #{commit.branch} revision #{commit.after} changed to #{jenkins.status}"
+        message = "Build status of #{build.commit.branch} revision #{build.commit.after} changed to #{jenkins.status}"
       else
         return nil
       end
 
-      commit.author_usernames.each do |author|
+      build.commit.author_usernames.each do |author|
         ircnick = USERNAME_MAPPING[author] || author
         session.msg ircnick, message
       end
@@ -89,6 +85,7 @@ private
   def trigger_build(repo, commit)
     uri = URI(repo.builder_url)
     id = next_id
+    @builds[id] = OpenStruct.new({ repo: repo, commit: commit})
     params = defaultParams(repo).merge ({SHA1: commit.after, ID: id})
 
     repo.builds[id.to_s] = commit
