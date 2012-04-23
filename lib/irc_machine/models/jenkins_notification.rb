@@ -21,6 +21,10 @@ module IrcMachine
         data.url
       end
 
+      def full_url
+        data.build["full_url"]
+      end
+
       def status
         data.build["status"]
       end

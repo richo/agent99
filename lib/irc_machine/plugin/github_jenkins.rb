@@ -52,6 +52,10 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
     end
   end
 
+  def notify(msg)
+    session.msg settings.notify, msg
+  end
+
   def jenkins_status(request, match)
     jenkins = ::IrcMachine::Models::JenkinsNotification.new(request.body.read)
 
@@ -63,13 +67,13 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
       when "COMPLETED" #{{{
         case jenkins.status
         when "SUCCESS", "FAILURE" #{{{
-          message = "Build of #{build.commit.repo_name}/#{build.commit.branch} was a #{jenkins.status} https://github.com/#{build.commit.repo_name}/#{build.commit.branch}/compare/#{build.commit.before[0..6]}...#{build.commit.after[0..6]} in [time]s"
+          notify "Build of #{build.commit.repo_name}/#{build.commit.branch} was a #{jenkins.status} https://github.com/#{build.commit.repo_name}/#{build.commit.branch}/compare/#{build.commit.before[0..6]}...#{build.commit.after[0..6]} in [time]s"
           if jenkins.status == "FAILURE"
-            session.msg settings.notify, "Jenkins output available at [ Jenkins URL ]"
+            notify "Jenkins output available at #{jenkins.full_url}"
           end
         #}}}
         when "ABORTED" #{{{
-          message = "Builds of #{build.commit.repo_name}/#{build.commit.branch} ABORTED" # No real way to work out who did it since we don't all have jenkins logins
+          notify "Builds of #{build.commit.repo_name}/#{build.commit.branch} ABORTED" # No real way to work out who did it since we don't all have jenkins logins
         #}}}
         end
       #}}}
@@ -77,10 +81,8 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
         # noop
       #}}}
       else #{{{ UNKNOWN
-        message = "Unknown phase #{jenkins.phase}"
+        notify "Unknown phase #{jenkins.phase}"
       end #}}}
-
-      session.msg settings.notify, message
 
     else
       not_found
