@@ -82,7 +82,7 @@ private
   def trigger_build(repo, commit)
     uri = URI(repo.builder_url)
     id = next_id
-    @builds[id] = OpenStruct.new({ repo: repo, commit: commit})
+    @builds[id.to_s] = OpenStruct.new({ repo: repo, commit: commit})
     params = defaultParams(repo).merge ({SHA1: commit.after, ID: id})
 
     uri.query = URI.encode_www_form(params)
