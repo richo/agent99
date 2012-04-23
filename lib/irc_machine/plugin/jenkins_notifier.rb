@@ -48,5 +48,9 @@ class IrcMachine::Plugin::JenkinsNotifier
       end
     end
   end
+
+  def endpoint
+    lambda { |request, match| process(request.body.read) }
+  end
 end
 

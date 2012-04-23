@@ -61,11 +61,7 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
         notify "Unknown build of #{build.parameters.SHA1} completed with status #{build.status}"
       end #}}}
     end
-    route(:post, %r{^/github/jenkins_status$}, :jenkins_notifier_endpoint)
-  end
-
-  def jenkins_notifier_endpoint(request, match)
-    @notifier.process(request.body.read)
+    route(:post, %r{^/github/jenkins_status$}, @notifier.endpoint)
   end
 
   def build_branch(request, match)
