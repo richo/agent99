@@ -25,7 +25,6 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
 
   attr_reader :settings
   def initialize(*args)
-    @id = 0
     @repos = Hash.new
     @builds = Hash.new
     conf = load_config
@@ -108,7 +107,7 @@ private
   end
 
   def next_id
-    @id += 1
+    Time.now.to_i
   end
 
   def defaultParams(repo)
