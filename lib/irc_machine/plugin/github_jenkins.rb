@@ -58,7 +58,8 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
     if build = @builds[jenkins.parameters.ID.to_s]
       case jenkins.phase
       when "STARTED" #{{{
-        message = "Build of #{build.commit.repo_name}/#{build.commit.branch} STARTED" #}}}
+        # noop
+      #}}}
       when "COMPLETED" #{{{
         case jenkins.status
         when "SUCCESS", "FAILURE" #{{{
@@ -66,15 +67,15 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
           if jenkins.status == "FAILURE"
             session.msg settings.notify, "Jenkins output available at [ Jenkins URL ]"
           end
-          #}}}
+        #}}}
         when "ABORTED" #{{{
           message = "Builds of #{build.commit.repo_name}/#{build.commit.branch} ABORTED" # No real way to work out who did it since we don't all have jenkins logins
-          #}}}
-        end
-       #}}}
-        message = "Build status of #{build.commit.repo_name}/#{build.commit.branch} revision #{build.commit.after} changed to #{jenkins.status} PING #{build.commit.author_usernames.join(" ")}"
-      when "FINISHED" #{{{
         #}}}
+        end
+      #}}}
+      when "FINISHED" #{{{
+        # noop
+      #}}}
       else #{{{ UNKNOWN
         message = "Unknown phase #{jenkins.phase}"
       end #}}}
