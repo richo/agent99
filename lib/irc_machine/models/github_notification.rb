@@ -34,6 +34,14 @@ module IrcMachine
         data.before
       end
 
+      def owner
+        OpenStruct.new(data.owner)
+      end
+
+      def repository
+        OpenStruct.new(data.repository)
+      end
+
       def authors
         data.commits.map{ |c| OpenStruct.new c["author"] }
       end

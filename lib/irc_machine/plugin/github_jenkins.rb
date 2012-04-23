@@ -67,13 +67,13 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
       when "COMPLETED" #{{{
         case jenkins.status
         when "SUCCESS", "FAILURE" #{{{
-          notify "Build of #{build.commit.repo_name}/#{build.commit.branch} was a #{jenkins.status} https://github.com/#{build.commit.repo_name}/#{build.commit.branch}/compare/#{build.commit.before[0..6]}...#{build.commit.after[0..6]} in [time]s PING #{build.commit.author_usernames}"
+          notify "Build of #{build.commit.repo_name}/#{build.commit.branch} was a #{jenkins.status} #{build.commit.respository.url}/compare/#{build.commit.before[0..6]}...#{build.commit.after[0..6]} in [time]s PING #{build.commit.author_usernames.join(" ")}"
           if jenkins.status == "FAILURE"
             notify "Jenkins output available at #{jenkins.full_url}"
           end
         #}}}
         when "ABORTED" #{{{
-          notify "Builds of #{build.commit.repo_name}/#{build.commit.branch} ABORTED" # No real way to work out who did it since we don't all have jenkins logins
+          notify "Build of #{build.commit.repo_name}/#{build.commit.branch} ABORTED" # No real way to work out who did it since we don't all have jenkins logins
         #}}}
         end
       #}}}
