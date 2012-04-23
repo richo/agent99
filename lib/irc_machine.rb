@@ -27,4 +27,5 @@ end
 end
 
 Dir[File.dirname(__FILE__) + '/irc_machine/models/*.rb'].each {|file| require file }
+Dir[File.dirname(__FILE__) + '/irc_machine/routers/*.rb'].each {|file| require file }
 Dir[File.dirname(__FILE__) + '/irc_machine/plugin/*.rb'].each {|file| require file }
