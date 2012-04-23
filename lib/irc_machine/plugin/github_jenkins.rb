@@ -85,13 +85,6 @@ private
     @builds[id] = OpenStruct.new({ repo: repo, commit: commit})
     params = defaultParams(repo).merge ({SHA1: commit.after, ID: id})
 
-    message = "Building #{commit.branch} revision #{commit.after}"
-    commit.author_usernames.each do |author|
-      ircnick = get_nick(author)
-      session.msg ircnick, message
-    end
-    session.msg settings.notify, message
-
     uri.query = URI.encode_www_form(params)
     return Net::HTTP.get(uri).is_a? Net::HTTPSuccess
   end
