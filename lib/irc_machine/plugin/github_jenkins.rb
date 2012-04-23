@@ -58,12 +58,12 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
 
     if build = @builds[jenkins.parameters.ID.to_s]
       case jenkins.phase
-      when :STARTED
-        message = "Build of #{build.commit.branch} revision #{build.commit.after} started"
-      when :COMPLETE
-        message = "Build status of #{build.commit.branch} revision #{build.commit.after} changed to #{jenkins.status}"
+      when "STARTED"
+        message = "Build of #{build.commit.repo_name}/#{build.commit.branch} STARTED"
+      when "COMPLETE"
+        message = "Build status of #{build.commit.repo_name}/#{build.commit.branch} revision #{build.commit.after} changed to #{jenkins.status}"
       else
-        return nil
+        message = "Unknown phase #{jenkins.phase}"
       end
 
       build.commit.author_usernames.each do |author|
