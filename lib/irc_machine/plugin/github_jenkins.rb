@@ -62,12 +62,13 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
     if build = @builds[jenkins.parameters.ID.to_s]
       case jenkins.phase
       when "STARTED" #{{{
-        # noop
+        build.start_time = Time.now.to_i
       #}}}
       when "COMPLETED" #{{{
         case jenkins.status
         when "SUCCESS", "FAILURE" #{{{
-          notify "Build of #{build.commit.repo_name}/#{build.commit.branch} was a #{jenkins.status} #{build.commit.repository.url}/compare/#{build.commit.before[0..6]}...#{build.commit.after[0..6]} in [time]s PING #{build.commit.author_usernames.join(" ")}"
+          build_time = Time.now.to_i - build.start_time
+          notify "Build of #{build.commit.repo_name}/#{build.commit.branch} was a #{jenkins.status} #{build.commit.repository.url}/compare/#{build.commit.before[0..6]}...#{build.commit.after[0..6]} in #{build_time}s PING #{build.commit.author_usernames.join(" ")}"
           if jenkins.status == "FAILURE"
             notify "Jenkins output available at #{jenkins.full_url}"
           end
@@ -100,7 +101,7 @@ private
   def trigger_build(repo, commit)
     uri = URI(repo.builder_url)
     id = next_id
-    @builds[id.to_s] = OpenStruct.new({ repo: repo, commit: commit})
+    @builds[id.to_s] = OpenStruct.new({ repo: repo, commit: commit, start_time: 0})
     params = defaultParams(repo).merge ({SHA1: commit.after, ID: id})
 
     uri.query = URI.encode_www_form(params)
