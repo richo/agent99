@@ -85,7 +85,9 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
       end #}}}
 
     else
-      not_found
+      if jenkins.phase == "COMPLETED"
+        notify "Unknown build of #{jenkins.parameters.SHA1} completed with status #{jenkins.status}"
+      end
     end
   end
 
