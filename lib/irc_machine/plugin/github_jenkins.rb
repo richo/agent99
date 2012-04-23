@@ -61,15 +61,11 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
       when "STARTED"
         message = "Build of #{build.commit.repo_name}/#{build.commit.branch} STARTED"
       when "COMPLETE"
-        message = "Build status of #{build.commit.repo_name}/#{build.commit.branch} revision #{build.commit.after} changed to #{jenkins.status}"
+        message = "Build status of #{build.commit.repo_name}/#{build.commit.branch} revision #{build.commit.after} changed to #{jenkins.status} PING #{build.commit.author_usernames.join(" ")}"
       else
         message = "Unknown phase #{jenkins.phase}"
       end
 
-      build.commit.author_usernames.each do |author|
-        ircnick = get_nick(author)
-        session.msg ircnick, message
-      end
       session.msg settings.notify, message
 
     else
