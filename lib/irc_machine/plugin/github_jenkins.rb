@@ -89,8 +89,6 @@ private
     @builds[id] = OpenStruct.new({ repo: repo, commit: commit})
     params = defaultParams(repo).merge ({SHA1: commit.after, ID: id})
 
-    repo.builds[id.to_s] = commit
-
     message = "Building #{commit.branch} revision #{commit.after}"
     commit.author_usernames.each do |author|
       ircnick = USERNAME_MAPPING[author] || author
