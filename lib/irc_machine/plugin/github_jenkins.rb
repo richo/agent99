@@ -87,7 +87,7 @@ private
 
     message = "Building #{commit.branch} revision #{commit.after}"
     commit.author_usernames.each do |author|
-      ircnick = USERNAME_MAPPING[author] || author
+      ircnick = get_nick(author)
       session.msg ircnick, message
     end
     session.msg settings.notify, message
