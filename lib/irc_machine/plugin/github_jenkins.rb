@@ -18,7 +18,6 @@ require 'net/http'
 #     }
 #   }
 #
-
 class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
 
   CONFIG_FILE = "github_jenkins.json"
@@ -38,8 +37,35 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
     @usernames = conf["usernames"] || {}
 
     route(:post, %r{^/github/jenkins$}, :build_branch)
-    route(:post, %r{^/github/jenkins_status$}, :jenkins_status)
+
+    initialize_jenkins_notifier
     super(*args)
+  end
+
+  def initialize_jenkins_notifier
+    @notifier = JenkinsNotifier.new(@builds) do |endpoint|
+      endpoint.on :success do |commit, build|#{{{ Success
+        notify format_msg(commit, build)
+      end #}}}
+
+      endpoint.on :failure do |commit, build| #{{{ Failure
+        notify format_msg(commit, build)
+        notify "Jenkins output available at #{build.full_url}"
+      end #}}}
+
+      endpoint.on :aborted do |commit, build| #{{{ Aborted
+        notify "Build of #{commit.repo_name}/#{commit.branch} ABORTED"
+      end #}}}
+
+      endpoint.on :unknown do |build| #{{{ Unknown
+        notify "Unknown build of #{build.parameters.SHA1} completed with status #{build.status}"
+      end #}}}
+    end
+    route(:post, %r{^/github/jenkins_status$}, :jenkins_notifier_endpoint)
+  end
+
+  def jenkins_notifier_endpoint(request, match)
+    @notifier.process(request.body.read)
   end
 
   def build_branch(request, match)
@@ -54,41 +80,6 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
 
   def notify(msg)
     session.msg settings.notify, msg
-  end
-
-  def jenkins_status(request, match)
-    jenkins = ::IrcMachine::Models::JenkinsNotification.new(request.body.read)
-
-    if build = @builds[jenkins.parameters.ID.to_s]
-      case jenkins.phase
-      when "STARTED" #{{{
-        # noop
-      #}}}
-      when "COMPLETED" #{{{
-        case jenkins.status
-        when "SUCCESS", "FAILURE" #{{{
-          notify "Build of #{build.commit.repo_name}/#{build.commit.branch} was a #{jenkins.status} #{build.commit.respository.url}/compare/#{build.commit.before[0..6]}...#{build.commit.after[0..6]} in [time]s PING #{build.commit.author_usernames.join(" ")}"
-          if jenkins.status == "FAILURE"
-            notify "Jenkins output available at #{jenkins.full_url}"
-          end
-        #}}}
-        when "ABORTED" #{{{
-          notify "Build of #{build.commit.repo_name}/#{build.commit.branch} ABORTED" # No real way to work out who did it since we don't all have jenkins logins
-        #}}}
-        end
-      #}}}
-      when "FINISHED" #{{{
-        # noop
-      #}}}
-      else #{{{ UNKNOWN
-        notify "Unknown phase #{jenkins.phase}"
-      end #}}}
-
-    else
-      if jenkins.phase == "COMPLETED"
-        notify "Unknown build of #{jenkins.parameters.SHA1} completed with status #{jenkins.status}"
-      end
-    end
   end
 
 private
@@ -117,5 +108,9 @@ private
 
   def defaultParams(repo)
     { token: repo.token }
+  end
+
+  def format_msg(commit, build)
+    "Build of #{commit.repo_name}/#{commit.branch} was a #{build.status} #{commit.respository.url}/compare/#{commit.before[0..6]}...#{commit.after[0..6]} in [time]s PING #{commit.author_usernames.join(" ")}"
   end
 end
