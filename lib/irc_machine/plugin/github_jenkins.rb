@@ -23,10 +23,6 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
 
   CONFIG_FILE = "github_jenkins.json"
 
-  USERNAME_MAPPING = {
-    "richoH" => "richo"
-  }
-
   attr_reader :settings
   def initialize(*args)
     @id = 0
@@ -40,6 +36,7 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
     end
 
     @settings = OpenStruct.new(conf["settings"])
+    @usernames = conf["usernames"] || {}
 
     route(:post, %r{^/github/jenkins$}, :build_branch)
     route(:post, %r{^/github/jenkins_status$}, :jenkins_status)
@@ -70,7 +67,7 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
       end
 
       build.commit.author_usernames.each do |author|
-        ircnick = USERNAME_MAPPING[author] || author
+        ircnick = get_nick(author)
         session.msg ircnick, message
       end
       session.msg settings.notify, message
@@ -81,6 +78,10 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
   end
 
 private
+
+  def get_nick(author)
+    @usernames[author] || author
+  end
 
   def trigger_build(repo, commit)
     uri = URI(repo.builder_url)
