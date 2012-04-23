@@ -70,7 +70,7 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
           build_time = Time.now.to_i - build.start_time
           notify "Build of #{build.commit.repo_name}/#{build.commit.branch} was a #{jenkins.status} #{build.commit.repository.url}/compare/#{build.commit.before[0..6]}...#{build.commit.after[0..6]} in #{build_time}s PING #{build.commit.author_usernames.join(" ")}"
           if jenkins.status == "FAILURE"
-            notify "Jenkins output available at #{jenkins.full_url}"
+            notify "Jenkins output available at #{jenkins.full_url}/console"
           end
         #}}}
         when "ABORTED" #{{{
@@ -88,6 +88,7 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
     else
       if jenkins.phase == "COMPLETED"
         notify "Unknown build of #{jenkins.parameters.SHA1} completed with status #{jenkins.status}"
+        notify "Jenkins output available at #{jenkins.full_url}/console"
       end
     end
   end
