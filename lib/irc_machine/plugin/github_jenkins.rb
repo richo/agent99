@@ -3,6 +3,9 @@ require 'net/http'
 # Project needs to be configured in jenkins with two parameters:
 # - SHA1 : Takes a sha hash to build
 # - ID   : Takes unique ID, purely for passing back to work out which build it
+# - DEPLOY : Optional parameter. If configured, when you deploy
+# the codebase it will be called with a value of true, meaning
+# that you can invoke the deploy task seperately.
 #          was that we're looking at
 #
 # Then configuration in the .json file is
