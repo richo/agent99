@@ -43,7 +43,12 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
     route(:post, %r{^/github/jenkins$}, :build_branch)
 
     initialize_jenkins_notifier
+    initialize_irc_handler
     super(*args)
+  end
+
+  def recieve_line(line)
+    @handler.process(line)
   end
 
   def initialize_jenkins_notifier
@@ -71,6 +76,32 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
       end #}}}
     end
     route(:post, %r{^/github/jenkins_status$}, @notifier.endpoint)
+  end
+
+  def initialize_irc_handler
+    @handler = ::IrcMachine::Routers::IrcRouter.new do |r|
+      r.route("deploy (\S+)") do |line, match|
+        # TODO Lookup repo
+        # TODO Check current build status
+        trigger_build(repo, commit, deploy: true)
+        session.notify match[1], "Build started"
+      end
+
+      r.route("deploy! (\S+)") do |line, match|
+        trigger_build(repo, commit, deploy: true)
+        session.notify match[1], "Build started"
+      end
+
+      r.route("build (\S+") do |line, match|
+        # TODO Check if build in progress
+        #
+        trigger_build(repo, commit, deploy: true)
+      end
+
+      r.route("build! (\S+") do |line, match|
+        trigger_build(repo, commit, deploy: true)
+      end
+    end
   end
 
   def build_branch(request, match)
