@@ -50,15 +50,21 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
     @notifier = ::IrcMachine::Routers::JenkinsRouter.new(@builds) do |endpoint|
       endpoint.on :started do |commit, build|#{{{ Started
         commit.start_time = Time.now.to_i
+        # TODO
+        notify_privmsg(commit, build, "STARTED")
+        session.msg commit.pusher, "Jenkins build of #{bold(commit.repo_name)}/#{bold(commit.branch)} has #{bold("STARTED")} #{build.full_url}console"
       end #}}}
 
       endpoint.on :completed, :success do |commit, build|#{{{ Success
         notify format_msg(commit, build)
+        notify_privmsg(commit, build, "SUCCEEDED")
       end #}}}
 
       endpoint.on :completed, :failure do |commit, build| #{{{ Failure
         notify format_msg(commit, build)
         notify "Jenkins output available at #{build.full_url}console"
+        notify_privmsg(commit, build, "FAILED")
+        session.msg commit.pusher, "Jenkins build of #{bold(commit.repo_name)}/#{bold(commit.branch)} has #{bold("FAILED")} #{build.full_url}console"
       end #}}}
 
       endpoint.on :completed, :aborted do |commit, build| #{{{ Aborted
@@ -119,6 +125,10 @@ private
     "#{0x02.chr}#{txt}#{0x0F.chr}"
   end
 
+  def notify_privmsg(commit, build, status)
+    pusher = get_nick(commit.commits.last["author"]["username"])
+    session.msg pusher, "Jenkins build of #{bold(commit.repo_name)}/#{bold(commit.branch)} has #{bold(status)}: #{build.full_url}console"
+  end
 
   def format_msg(commit, build)
      build_time = Time.now.to_i - commit.start_time
