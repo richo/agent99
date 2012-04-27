@@ -53,7 +53,6 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
         commit.start_time = Time.now.to_i
         # TODO
         notify_privmsg(commit, build, "STARTED")
-        session.msg commit.pusher, "Jenkins build of #{bold(commit.repo_name)}/#{bold(commit.branch)} has #{bold("STARTED")} #{build.full_url}console"
       end #}}}
 
       endpoint.on :completed, :success do |commit, build|#{{{ Success
@@ -65,7 +64,6 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
         notify format_msg(commit, build)
         notify "Jenkins output available at #{build.full_url}console"
         notify_privmsg(commit, build, "FAILED")
-        session.msg commit.pusher, "Jenkins build of #{bold(commit.repo_name)}/#{bold(commit.branch)} has #{bold("FAILED")} #{build.full_url}console"
       end #}}}
 
       endpoint.on :completed, :aborted do |commit, build| #{{{ Aborted
