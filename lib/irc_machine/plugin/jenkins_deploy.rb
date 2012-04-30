@@ -68,6 +68,11 @@ end
 class IrcMachine::Plugin::JenkinsNotify < IrcMachine::Plugin::Base
 
   CONFIG_FILE = "jenkins_notify.json"
+  SQUIRRELS = %q[
+    http://shipitsquirrel.github.com/images/ship%20it%20squirrel.png
+    http://shipitsquirrel.github.com/images/squirrel.png
+  ]
+
 
   def initialize(*args)
     @apps = SymbolicHash.new
@@ -140,7 +145,9 @@ class IrcMachine::Plugin::JenkinsNotify < IrcMachine::Plugin::Base
   private
 
   def deploy(app, user, channel)
-    session.msg channel, app.deploy!(user, channel)
+    session.msg channel, app.deploy!(user, channel).tap do |msg|
+      session.msg channel, SQUIRRELS.sample if msg =~ /Deploy started/
+    end
   end
 
   def load_config
