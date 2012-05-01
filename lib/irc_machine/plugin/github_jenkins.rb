@@ -134,7 +134,6 @@ private
               else
                 build.status
               end
-
-    "Build of #{commit.repo_name.irc_bold}/#{commit.branch.irc_bold} was a #{status} #{commit.repository.url}/compare/#{commit.before[0..6]}...#{commit.after[0..6]} in #{commit.build_time.irc_bold}s PING #{authors.join(" ")}"
+     commit.notification_format(status)
   end
 end
