@@ -30,12 +30,12 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
 
   attr_reader :settings
   def initialize(*args)
-    @repos = Hash.new
+    @projects = Hash.new
     @builds = Hash.new
     conf = load_config
 
     conf["builds"].each do |k, v|
-      @repos[k] = OpenStruct.new(v)
+      @projects[k] = OpenStruct.new(v)
     end
 
     @settings = OpenStruct.new(conf["settings"])
@@ -81,7 +81,7 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
   def build_branch(request, match)
     commit = ::IrcMachine::Models::GithubNotification.new(request.body.read)
 
-    if repo = @repos[commit.repo_name]
+    if repo = @projects[commit.repo_name]
       trigger_build(repo, commit)
     else
       not_found
