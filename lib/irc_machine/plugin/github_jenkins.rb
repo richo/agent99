@@ -81,8 +81,8 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
   def build_branch(request, match)
     commit = ::IrcMachine::Models::GithubNotification.new(request.body.read)
 
-    if repo = @projects[commit.repo_name]
-      trigger_build(repo, commit)
+    if project = @projects[commit.repo_name]
+      trigger_build(project, commit)
     else
       not_found
     end
@@ -98,11 +98,11 @@ private
     @usernames[author] || author
   end
 
-  def trigger_build(repo, commit)
-    uri = URI(repo.builder_url)
+  def trigger_build(project, commit)
+    uri = URI(project.builder_url)
     id = next_id
-    @builds[id.to_s] = OpenStruct.new({ repo: repo, commit: commit, start_time: 0})
-    params = defaultParams(repo).merge ({SHA1: commit.after, ID: id})
+    @builds[id.to_s] = OpenStruct.new({ repo: project, commit: commit, start_time: 0})
+    params = defaultParams(project).merge ({SHA1: commit.after, ID: id})
 
     uri.query = URI.encode_www_form(params)
     return Net::HTTP.get(uri).is_a? Net::HTTPSuccess
@@ -116,8 +116,8 @@ private
     Time.now.to_i
   end
 
-  def defaultParams(repo)
-    { token: repo.token }
+  def defaultParams(project)
+    { token: project.token }
   end
 
   def notify_privmsg(commit, build, status)
