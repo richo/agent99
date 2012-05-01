@@ -120,22 +120,6 @@ private
     { token: repo.token }
   end
 
-  def bold(txt)
-    "#{0x02.chr}#{txt}#{0x0F.chr}"
-  end
-
-  def color(txt, colorcode)
-    "#{0x03.chr}#{colorcode}#{txt}#{0x03.chr}"
-  end
-
-  def green(txt)
-    color(txt, 3)
-  end
-
-  def red(txt)
-    color(txt, 4)
-  end
-
   def notify_privmsg(commit, build, status)
     commit = commit.commit
     pusher = get_nick(commit.commits.last["author"]["username"])
@@ -148,13 +132,13 @@ private
      authors = commit.author_usernames.map { |a| get_nick(a) }
      status = case build.status
               when "SUCCESS"
-                bold(green(build.status))
+                build.status.irc_green.irc_bold
               when "FAILURE"
-                bold(red(build.status))
+                build.status.irc_red.irc_bold
               else
                 build.status
               end
 
-    "Build of #{bold(commit.repo_name)}/#{bold(commit.branch)} was a #{status} #{commit.repository.url}/compare/#{commit.before[0..6]}...#{commit.after[0..6]} in #{bold(build_time)}s PING #{authors.join(" ")}"
+    "Build of #{commit.repo_name.irc_bold}/#{commit.branch.irc_bold} was a #{status} #{commit.repository.url}/compare/#{commit.before[0..6]}...#{commit.after[0..6]} in #{commit.build_time.irc_bold}s PING #{authors.join(" ")}"
   end
 end
