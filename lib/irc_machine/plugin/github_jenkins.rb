@@ -23,7 +23,6 @@ require 'net/http'
 #
 # usernames is an optional hash of github -> irc nickname mappings so that users can be usefully notified
 #
-# TODO Cleanup this commit.commit bollox
 class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
 
   CONFIG_FILE = "github_jenkins.json"
@@ -121,13 +120,11 @@ private
   end
 
   def notify_privmsg(commit, build, status)
-    commit = commit.commit
     pusher = get_nick(commit.commits.last["author"]["username"])
     session.msg pusher, "Jenkins build of #{bold(commit.repo_name)}/#{bold(commit.branch)} has #{bold(status)}: #{build.full_url}console"
   end
 
   def format_msg(commit, build)
-     commit = commit.commit
      authors = commit.author_usernames.map { |a| get_nick(a) }
      status = case build.status
               when "SUCCESS"
