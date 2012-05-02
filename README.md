@@ -1,5 +1,24 @@
-IRC Machine
-===========
+Agent99
+=======
+
+Basic Interaction
+-----------------
+
+( Pushes to branches will trigger builds )
+
+#### agent99 rebuild contests/features/master
+* Rebuilds the last build of features/master in contests
+
+#### agent99 deploy contests
+* fetches the head of contests/production, checks it's passed CI and deploys
+* ? Should the production branch be a configurable?
+
+#### agent99 deploy! contests
+* Deploys the head of production
+
+Old docs
+--------
+
 
 An IRC bot with a RESTful HTTP interface, built on Ruby and [EventMachine](http://rubyeventmachine.com/).
 
