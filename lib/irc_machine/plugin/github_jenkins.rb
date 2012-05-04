@@ -137,7 +137,7 @@ private
 
 
   def format_msg(commit, build)
-    status = colorise(build)
+    status = colorise(build.status)
     commit.notification_format(status)
   end
 end
