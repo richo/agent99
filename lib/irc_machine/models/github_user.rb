@@ -7,17 +7,12 @@ module IrcMachine
         def nicks=(mapping)
           @@nicks = mapping
         end
-
-        def get_nick(nick)
-          @@nicks[nick] || nick
-        end
       end
 
       # Wrapper class that does a lookup based on usernames at init time
-      attr_accessor :nick
-      def intialize
-        super
-        nick = self.class.get_nick(username)
+
+      def nick
+        @@nicks[username] || username
       end
 
       def to_s
