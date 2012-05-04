@@ -141,14 +141,14 @@ private
   end
 
   # TODO build model
-  def colorise(build)
-    case build.status
+  def colorise(status)
+    case status
     when /^SUCC/
-      build.status.irc_green.irc_bold
+      status.irc_green.irc_bold
     when /^FAIL/
-      build.status.irc_red.irc_bold
+      status.irc_red.irc_bold
     else
-      build.status
+      status
     end
   end
 
