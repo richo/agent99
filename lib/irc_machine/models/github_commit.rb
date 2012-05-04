@@ -8,7 +8,7 @@ module IrcMachine
       end
 
       def method_missing(sym, *args)
-        # Make it the commit's problem:w
+        # Make it the commit's problem
         self.commit.send(sym, *args)
       end
 
