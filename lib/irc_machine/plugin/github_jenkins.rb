@@ -137,8 +137,7 @@ private
   end
 
   def notify_privmsg(commit, build, status)
-    pusher = get_nick(commit.commits.last["author"]["username"])
-    session.msg pusher, "Jenkins build of #{commit.repo_name.irc_bold}/#{commit.branch.irc_bold} has #{colorise(status)}: #{build.full_url}console"
+    session.msg commit.pusher, "Jenkins build of #{commit.repo_name.irc_bold}/#{commit.branch.irc_bold} has #{colorise(status)}: #{build.full_url}console"
   end
 
   # TODO build model
