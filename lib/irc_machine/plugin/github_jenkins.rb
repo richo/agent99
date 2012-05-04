@@ -23,19 +23,18 @@ require 'net/http'
 #
 # usernames is an optional hash of github -> irc nickname mappings so that users can be usefully notified
 #
-# TODO Cleanup this commit.commit bollox
 class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
 
   CONFIG_FILE = "github_jenkins.json"
 
   attr_reader :settings
   def initialize(*args)
-    @repos = Hash.new
+    @projects = Hash.new
     @builds = Hash.new
     conf = load_config
 
     conf["builds"].each do |k, v|
-      @repos[k] = OpenStruct.new(v)
+      @projects[k] = OpenStruct.new(v)
     end
 
     @settings = OpenStruct.new(conf["settings"])
@@ -98,8 +97,8 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
   def build_branch(request, match)
     commit = ::IrcMachine::Models::GithubNotification.new(request.body.read)
 
-    if repo = @repos[commit.repo_name]
-      trigger_build(repo, commit)
+    if project = @projects[commit.repo_name]
+      trigger_build(project, commit)
     else
       not_found
     end
@@ -115,11 +114,11 @@ private
     @usernames[author] || author
   end
 
-  def trigger_build(repo, commit)
-    uri = URI(repo.builder_url)
+  def trigger_build(project, commit)
+    uri = URI(project.builder_url)
     id = next_id
-    @builds[id.to_s] = OpenStruct.new({ repo: repo, commit: commit, start_time: 0, repo_name: commit.repository.name, branch_name: commit.branch })
-    params = defaultParams(repo).merge ({SHA1: commit.after, ID: id})
+    @builds[id.to_s] = OpenStruct.new({ repo: project, commit: commit, start_time: 0, repo_name: commit.repository.name, branch_name: commit.branch })
+    params = defaultParams(project).merge ({SHA1: commit.after, ID: id})
 
     uri.query = URI.encode_www_form(params)
     return Net::HTTP.get(uri).is_a? Net::HTTPSuccess
@@ -133,46 +132,26 @@ private
     Time.now.to_i
   end
 
-  def defaultParams(repo)
-    { token: repo.token }
-  end
-
-  def bold(txt)
-    "#{0x02.chr}#{txt}#{0x0F.chr}"
-  end
-
-  def color(txt, colorcode)
-    "#{0x03.chr}#{colorcode}#{txt}#{0x03.chr}"
-  end
-
-  def green(txt)
-    color(txt, 3)
-  end
-
-  def red(txt)
-    color(txt, 4)
+  def defaultParams(project)
+    { token: project.token }
   end
 
   def notify_privmsg(commit, build, status)
-    commit = commit.commit
     pusher = get_nick(commit.commits.last["author"]["username"])
     session.msg pusher, "Jenkins build of #{bold(commit.repo_name)}/#{bold(commit.branch)} has #{bold(status)}: #{build.full_url}console"
   end
 
   def format_msg(commit, build)
-     build_time = Time.now.to_i - commit.start_time
-     commit = commit.commit
      authors = commit.author_usernames.map { |a| get_nick(a) }
      status = case build.status
               when "SUCCESS"
-                bold(green(build.status))
+                build.status.irc_green.irc_bold
               when "FAILURE"
-                bold(red(build.status))
+                build.status.irc_red.irc_bold
               else
                 build.status
               end
-
-    "Build of #{bold(commit.repo_name)}/#{bold(commit.branch)} was a #{status} #{commit.repository.url}/compare/#{commit.before[0..6]}...#{commit.after[0..6]} in #{bold(build_time)}s PING #{authors.join(" ")}"
+     commit.notification_format(status)
   end
 
   def build_pattern(text)
