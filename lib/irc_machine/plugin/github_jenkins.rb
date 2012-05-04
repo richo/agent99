@@ -138,19 +138,25 @@ private
 
   def notify_privmsg(commit, build, status)
     pusher = get_nick(commit.commits.last["author"]["username"])
-    session.msg pusher, "Jenkins build of #{commit.repo_name.irc_bold}/#{commit.branch.irc_bold} has #{status.irc_bold}: #{build.full_url}console"
+    session.msg pusher, "Jenkins build of #{commit.repo_name.irc_bold}/#{commit.branch.irc_bold} has #{colorise(status)}: #{build.full_url}console"
   end
 
+  # TODO build model
+  def colorise(build)
+    case build.status
+    when /^SUCC/
+      build.status.irc_green.irc_bold
+    when /^FAIL/
+      build.status.irc_red.irc_bold
+    else
+      build.status
+    end
+  end
+
+
   def format_msg(commit, build)
-     status = case build.status
-              when "SUCCESS"
-                build.status.irc_green.irc_bold
-              when "FAILURE"
-                build.status.irc_red.irc_bold
-              else
-                build.status
-              end
-     commit.notification_format(status)
+    status = colorise(build)
+    commit.notification_format(status)
   end
 
   def build_pattern(text)
