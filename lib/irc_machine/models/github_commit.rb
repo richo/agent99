@@ -20,7 +20,7 @@ module IrcMachine
       end
 
       def notification_format(build_status)
-        "Build of #{commit.repo_name.irc_bold}/#{commit.branch.irc_bold} was a #{build_status} #{commit.repository.url}/compare/#{commit.before[0..6]}...#{commit.after[0..6]} in #{build_time.irc_bold}s PING #{authors.join(" ")}"
+        "Build of #{commit.repo_name.irc_bold}/#{commit.branch.irc_bold} was a #{build_status} #{commit.repository.url}/compare/#{commit.before[0..6]}...#{commit.after[0..6]} in #{build_time.irc_bold}s PING #{authors.map(&:nick).join(" ")}"
       end
 
     end
