@@ -16,6 +16,7 @@ require 'net/http'
 #     "builds": {
 #       "reponame": {
 #         "builder_url": "URL GOES HERE",
+#         "releaser_url": "URL GOES HERE",
 #         "token"      : "JENKINS_TOKEN",
 #       }
 #     }
@@ -29,6 +30,7 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
 
   attr_reader :settings
   def initialize(*args)
+    super(*args)
     @projects = Hash.new
     @builds = Hash.new
     conf = load_config
@@ -46,24 +48,23 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
 
     route(:post, %r{^/github/jenkins$}, :build_branch)
 
+    initialize_irc_router
     initialize_jenkins_notifier
-    super(*args)
   end
 
-  def recieve_line(line)
-    if line =~ build_pattern("rebuild ([^ /])/(\S+)")
-      nick, chan, repo, branch = $1, $2, $3, $4
-
-      # Find the most recent build that matches repo and branch
-      build_id = @builds.keys.sort{ |a, b| b <=> a }.each do |k|
-        build = @builds[k]
-        if build.repo_name == repo and build.branch_name == branch
-          return trigger_build(build.repo, build.commit)
-        end
+  def initialize_irc_router
+    @router = ::IrcMachine::Routers::IrcRouter.new(session) do |router|
+      # router.on /^:(\S+)!\S+ PRIVMSG (#+\S+) :#{session.state.nick}:? test$/ do |line, match|
+      router.on "deploy (\S+)" do |line, match|
+        session.msg "richo", "got test"
       end
+    end
 
-      session.msg chan, "#{nick}: No builds matching #{bold(repo)}/#{bold(branch)}"
-
+    # Overload any existing method
+    class << self
+      define_method(:receive_line) do |line|
+        @router.dispatch(line)
+      end
     end
   end
 
@@ -158,7 +159,4 @@ private
     commit.notification_format(status)
   end
 
-  def build_pattern(text)
-    /^:(\S+)!\S+ PRIVMSG (#+\S+) :#{session.state.nick}:? #{text}$/
-  end
 end
