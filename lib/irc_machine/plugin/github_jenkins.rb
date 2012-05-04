@@ -38,7 +38,11 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
     end
 
     @settings = OpenStruct.new(conf["settings"])
-    @usernames = conf["usernames"] || {}
+
+    # {}Seed the cache of usernames
+    if conf.include? "usernames"
+      ::IrcMachine::Models::GithubUser.nicks = conf["usernames"]
+    end
 
     route(:post, %r{^/github/jenkins$}, :build_branch)
 
@@ -110,10 +114,6 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
 
 private
 
-  def get_nick(author)
-    @usernames[author] || author
-  end
-
   def trigger_build(project, commit)
     uri = URI(project.builder_url)
     id = next_id
@@ -142,7 +142,6 @@ private
   end
 
   def format_msg(commit, build)
-     authors = commit.author_usernames.map { |a| get_nick(a) }
      status = case build.status
               when "SUCCESS"
                 build.status.irc_green.irc_bold
