@@ -9,6 +9,7 @@
 end
 
 %w{
+  monkey_patches
   commands
   irc_connection
   session
