@@ -118,7 +118,7 @@ private
   def trigger_build(project, commit)
     uri = URI(project.builder_url)
     id = next_id
-    @builds[id.to_s] = ::IrcMachine::Models::GithubCommit.new({ repo: project, commit: commit, start_time: 0, repo_name: commit.repository.name, branch_name: commit.branch })
+    @builds[id.to_s] = ::IrcMachine::Models::GithubCommit.new({ repo: project, commit: commit, repo_name: commit.repository.name, branch_name: commit.branch })
     params = defaultParams(project).merge ({SHA1: commit.after, ID: id})
 
     uri.query = URI.encode_www_form(params)

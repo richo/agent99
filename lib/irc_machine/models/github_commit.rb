@@ -3,6 +3,11 @@ module IrcMachine
 
     class GithubCommit < OpenStruct
 
+      def self.new(hash={})
+        hash["start_time"] = 0
+        super(hash=hash)
+      end
+
       def build_time
         (Time.now.to_i - start_time).to_s
       end
