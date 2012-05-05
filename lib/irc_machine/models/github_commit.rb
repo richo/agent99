@@ -2,8 +2,14 @@ module IrcMachine
   module Models
 
     class GithubCommit < OpenStruct
-
+      REQUIRED_KEYS = [:repo, :commit, :repo_name, :branch_name]
       def self.new(hash={})
+        hash.symbolize_keys.tap do |hash|
+          REQUIRED_KEYS.each do |key|
+            raise Exceptions::ModelValidationError unless hash[key]
+          end
+        end
+
         hash["start_time"] = 0
         super(hash=hash)
       end

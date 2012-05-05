@@ -7,7 +7,13 @@ describe IrcMachine::Models::GithubCommit do
   end
 
   it "Should fail to initialize unless correct keys are passed in" do
-    false.should === true
+    lambda {
+      ::IrcMachine::Models::GithubCommit.new({ repo: "rawk" })
+    }.should raise_error ::IrcMachine::Models::Exceptions::ModelValidationError
+
+    lambda {
+      ::IrcMachine::Models::GithubCommit.new({ repo: "repo", commit: "commit", repo_name: "repo_name", branch_name: "branch_name"})
+    }.should_not raise_error
   end
 
   it "Should calculate build time" do
