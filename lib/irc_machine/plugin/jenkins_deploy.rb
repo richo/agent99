@@ -1,7 +1,7 @@
 require 'net/http'
 class MutexApp
   attr_reader :name, :last_user
-  attr_accessor :deploy_url
+  attr_accessor :deploy_url, :hooks
 
   def initialize(name)
     @name = name
@@ -25,6 +25,8 @@ class MutexApp
     @last_user = user
     @cache[:channel] = channel
 
+    run_hook(:pre_deploy)
+
     uri = URI(deploy_url)
     Net::HTTP.get(uri)
 
@@ -35,6 +37,7 @@ class MutexApp
     last_deploying = @deploying
     @last_state = :successful
     @deploying = false
+    run_hook(:success)
     return last_deploying
   end
 
@@ -42,6 +45,7 @@ class MutexApp
     last_deploying = @deploying
     @last_state = :failure
     @deploying = false
+    run_hook(:failure)
     return last_deploying
   end
 
@@ -55,6 +59,12 @@ class MutexApp
 
   def deploying?
     @deploying
+  end
+
+  def run_hook(hook_name)
+    if hooks && hook = hooks[hook_name]
+      `#{hook}`
+    end
   end
 
 end
@@ -81,6 +91,7 @@ class IrcMachine::Plugin::JenkinsNotify < IrcMachine::Plugin::Base
     load_config.each do |k, v|
       @apps[k] = MutexApp.new(k) do |app|
         app.deploy_url = v[:deploy_url]
+        app.hooks = v[:hooks]
       end
 
       route(:get, %r{/deploy/(#{k})/success}, :rest_success)
@@ -128,7 +139,6 @@ class IrcMachine::Plugin::JenkinsNotify < IrcMachine::Plugin::Base
     if app = apps[match[1]]
       if app.succeed
         session.msg app.last_channel, "Deploy of #{app.name} succeeded \\o/ | PING #{app.last_user}"
-        `ssh saunamacmini ./deploy_succeed.sh &`
       end
     else
       not_found
@@ -139,7 +149,6 @@ class IrcMachine::Plugin::JenkinsNotify < IrcMachine::Plugin::Base
     if app = apps[match[1]]
       if app.fail
         session.msg app.last_channel, "Deploy of #{app.name} FAILED | PING #{app.last_user}"
-        `ssh saunamacmini ./deploy_fail.sh &`
       end
     else
       not_found
@@ -152,7 +161,6 @@ class IrcMachine::Plugin::JenkinsNotify < IrcMachine::Plugin::Base
     status = app.deploy!(user, channel)
     if status =~ /Deploy started/
       session.msg channel, SQUIRRELS.sample
-      `ssh saunamacmini ./pre_deploy.sh &`
     end
     session.msg channel, status
   end
