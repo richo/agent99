@@ -61,9 +61,15 @@ class MutexApp
     @deploying
   end
 
+  def substitute_vars(cmd)
+    # FIXME - generic solution
+    cmd.gsub(/:name/, name)
+  end
+
   def run_hook(hook_name)
     if hooks && hook = hooks[hook_name]
-      `#{hook}`
+      cmd = substitute_vars(hook)
+      `#{cmd}`
     end
   end
 
