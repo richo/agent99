@@ -5,7 +5,12 @@ module Fixtures
       def new(opts={})
         {
           build: {
-            phase: opts[:phase] || "started"
+            phase: opts[:phase] || "started",
+            status: opts[:status],
+            full_url: opts[:full_url],
+            parameters: {
+              ID: Time.now.to_i || opts[:id]
+            }
           }
         }.to_json
       end
