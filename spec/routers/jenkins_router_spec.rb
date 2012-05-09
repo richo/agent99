@@ -36,10 +36,11 @@ describe IrcMachine::Routers::JenkinsRouter do
   end
 
   it "Should use the default route if no :status is requested" do
-    request, response = get_env( id: 123, phase: "completed" )
     route = mock()
     route.expects(:generic)
-    builds = [ 123 => mock ]
+
+    request, response = get_env( ID: 123, phase: "completed" )
+    builds = { "123" => mock }
 
     router = ::IrcMachine::Routers::JenkinsRouter.new(builds) do |endpoint|
       endpoint.on :completed do |commit, build|

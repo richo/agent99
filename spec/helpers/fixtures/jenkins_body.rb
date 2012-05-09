@@ -9,7 +9,7 @@ module Fixtures
             status: opts[:status],
             full_url: opts[:full_url],
             parameters: {
-              ID: Time.now.to_i || opts[:id]
+              ID: opts[:ID] || Time.now.to_i
             }
           }
         }.to_json
