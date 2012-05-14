@@ -164,12 +164,12 @@ class IrcMachine::Plugin::JenkinsNotify < IrcMachine::Plugin::Base
   def rest_success(request, match)
     if app = apps[match[1]]
       if app.succeed
-        session.msg app.last_channel, "Deploy of #{app.name} succeeded \\o/ | PING #{app.last_user}"
         `ssh saunamacmini ./deploy_succeed.sh &`
       end
     else
       not_found
     end
+    session.topic app.last_channel, get_topic
   end
 
   def rest_fail(request, match)
@@ -181,6 +181,7 @@ class IrcMachine::Plugin::JenkinsNotify < IrcMachine::Plugin::Base
     else
       not_found
     end
+    session.topic app.last_channel, get_topic
   end
 
   private
@@ -192,6 +193,13 @@ class IrcMachine::Plugin::JenkinsNotify < IrcMachine::Plugin::Base
       `ssh saunamacmini ./pre_deploy.sh &`
     end
     session.msg channel, status
+    session.topic app.last_channel, get_topic
+  end
+
+  def get_topic
+    @apps.map do |k, v|
+      "#{k}: #{v.last_state}"
+    end.join(" || ")
   end
 
   def load_config
