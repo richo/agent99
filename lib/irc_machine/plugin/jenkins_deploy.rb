@@ -100,6 +100,8 @@ class IrcMachine::Plugin::JenkinsNotify < IrcMachine::Plugin::Base
 
       route(:get, %r{/deploy/(#{k})/success}, :rest_success)
       route(:get, %r{/deploy/(#{k})/fail}, :rest_fail)
+      route(:get, %r{/deploy/(#{k})/status}, :rest_status)
+      route(:get, %r{/deploy/(#{k})/deploy}, :rest_deploy)
 
     end
 
@@ -178,6 +180,23 @@ class IrcMachine::Plugin::JenkinsNotify < IrcMachine::Plugin::Base
         session.msg app.last_channel, "Deploy of #{app.name} FAILED | PING #{app.last_user}"
         `ssh saunamacmini ./deploy_fail.sh &`
       end
+    else
+      not_found
+    end
+  end
+
+  def rest_status(request, match)
+    if app = apps[match[1]]
+      ok, { :deploying => app.deploying?, :last_state => app.last_state }.to_json
+    else
+      not_found
+    end
+  end
+
+  def reest_deploy(request, match)
+    if app = apps[match[1]]
+      status = app.deploy!
+      ok, { :deploying => status =~ /Deploy started/, }.to_json
     else
       not_found
     end
