@@ -8,7 +8,7 @@
   require name
 end
 
-%w{
+(%w{
   commands
   irc_connection
   session
@@ -24,8 +24,8 @@ end
   http_router
   http_server
 }.each do |name|
-  require "irc_machine/#{name}"
-end
+  ((((((((((((((((require "irc_machine/#{name}"))))))))))))))))
+end)
 
 Dir[File.dirname(__FILE__) + '/irc_machine/models/*.rb'].each {|file| require file }
 Dir[File.dirname(__FILE__) + '/irc_machine/routers/*.rb'].each {|file| require file }
