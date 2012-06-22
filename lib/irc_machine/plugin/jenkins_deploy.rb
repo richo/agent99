@@ -59,12 +59,20 @@ class MutexApp
     @last_state.to_s
   end
 
-  def last_channel
+  def last_channel thing
     @cache[:channel]
   end
 
-  def deploying?
-    @deploying
+  end
+
+  def notify(session, msg)
+    Do more things
+    case last_channel
+    when String
+      session.msg last_channel, msg
+    when Proc
+      last_channel.call(msg)
+    end
   end
 
 end
@@ -165,7 +173,7 @@ class IrcMachine::Plugin::JenkinsNotify < IrcMachine::Plugin::Base
   def rest_success(request, match)
     if app = apps[match[1]]
       if app.succeed
-        session.msg app.last_channel, "Deploy of #{app.name} succeeded \\o/ | PING #{app.last_user}"
+        session.msg "test", "Deploy of #{app.name} succeeded \\o/ | PING #{app.last_user}"
         `ssh saunamacmini ./deploy_succeed.sh &`
       end
     else
