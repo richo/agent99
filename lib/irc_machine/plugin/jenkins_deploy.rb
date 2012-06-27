@@ -59,14 +59,15 @@ class MutexApp
     @last_state.to_s
   end
 
-  def last_channel thing
+  def last_channel
     @cache[:channel]
   end
 
+  def deploying?
+    @deploying
   end
 
   def notify(session, msg)
-    Do more things
     case last_channel
     when String
       session.msg last_channel, msg
@@ -162,7 +163,7 @@ class IrcMachine::Plugin::JenkinsNotify < IrcMachine::Plugin::Base
         session.msg channel, "Unknown repo: #{repo}"
       else
         if app.deploying?
-          session.msg channel, "#{user}: #{repo} is currently being deployed by #{app.last_user}"
+          session.msg channel, "#{user}: #{repo} is currently #{app.last_state}; caused by #{app.last_user}"
         else
           session.msg channel, "#{user}: #{repo} is not currently being deployed"
         end
@@ -173,7 +174,7 @@ class IrcMachine::Plugin::JenkinsNotify < IrcMachine::Plugin::Base
   def rest_success(request, match)
     if app = apps[match[1]]
       if app.succeed
-        session.msg "test", "Deploy of #{app.name} succeeded \\o/ | PING #{app.last_user}"
+        app.notify(session, "Deploy of #{app.name} succeeded \\o/ | PING #{app.last_user}")
         `ssh saunamacmini ./deploy_succeed.sh &`
       end
     else
@@ -184,7 +185,7 @@ class IrcMachine::Plugin::JenkinsNotify < IrcMachine::Plugin::Base
   def rest_fail(request, match)
     if app = apps[match[1]]
       if app.fail
-        session.msg app.last_channel, "Deploy of #{app.name} FAILED | PING #{app.last_user}"
+         app.notify(session, "Deploy of #{app.name} FAILED | PING #{app.last_user}")
         `ssh saunamacmini ./deploy_fail.sh &`
       end
     else
@@ -193,15 +194,31 @@ class IrcMachine::Plugin::JenkinsNotify < IrcMachine::Plugin::Base
   end
 
   # Callback that github_jenkins uses
-  def build_success(repo, branch, callback)
+  def build_success(commit, build, callback)
+    repo = commit.repo_name
+    branch = commit.branch
+
     return unless branch == "master"
     return unless (app = @apps[repo])
 
     if app.auto_deploy
       callback.call("Attempting automatic deploy of #{app.name}")
-      callback.call(app.deploy!)
+      callback.call(app.deploy!(commit.pusher, callback))
     end
   end
+
+  def build_fail(commit, build, callback)
+    repo = commit.repo_name
+    branch = commit.branch
+
+    return unless branch == "master"
+    return unless (app = @apps[repo])
+
+    callback.call("Disabling deploys due to failed build of #{app.name}")
+    app.disable!
+    callback.call("#{app.name} has been disabled")
+  end
+
 
   private
 
