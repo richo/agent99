@@ -33,6 +33,10 @@ module IrcMachine
         data.build["phase"]
       end
 
+      def state
+        status || phase
+      end
+
       def parameters
         @parameters ||= OpenStruct.new(data.build["parameters"])
       end
