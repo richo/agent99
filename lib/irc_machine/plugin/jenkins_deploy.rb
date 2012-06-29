@@ -2,6 +2,7 @@ require 'net/http'
 class MutexApp
   attr_reader :name, :last_user
   attr_accessor :deploy_url, :auto_deploy
+  attr_accessor :hooks
 
   def initialize(name)
     @name = name
@@ -84,6 +85,23 @@ class MutexApp
 
 end
 
+class Hook
+  def initialize(cmd)
+    @cmd = cmd
+  end
+
+  def call
+    case cmd
+    when Array
+      cmd.each do |i|
+      `#{i}`
+      end
+    when String
+      `#{cmd}`
+    end
+  end
+end
+
 class SymbolicHash < Hash
   def [](k)
     super k.to_sym
@@ -112,6 +130,7 @@ class IrcMachine::Plugin::JenkinsNotify < IrcMachine::Plugin::Base
       @apps[k] = MutexApp.new(k) do |app|
         app.deploy_url = v[:deploy_url]
         app.auto_deploy = !!v[:auto_deploy]
+        app.hooks = get_hooks(v)
       end
 
       route(:get, %r{/deploy/(#{k})/success}, :rest_success)
@@ -182,7 +201,7 @@ class IrcMachine::Plugin::JenkinsNotify < IrcMachine::Plugin::Base
     if app = apps[match[1]]
       if app.succeed
         app.notify(session, "Deploy of #{app.name} succeeded \\o/ | PING #{app.last_user}")
-        `ssh saunamacmini ./deploy_succeed.sh &`
+        app.hooks["success"].call
       end
     else
       not_found
@@ -193,7 +212,7 @@ class IrcMachine::Plugin::JenkinsNotify < IrcMachine::Plugin::Base
     if app = apps[match[1]]
       if app.fail
          app.notify(session, "Deploy of #{app.name} FAILED | PING #{app.last_user}")
-        `ssh saunamacmini ./deploy_fail.sh &`
+        app.hooks["fail"].call
       end
     else
       not_found
@@ -246,6 +265,18 @@ class IrcMachine::Plugin::JenkinsNotify < IrcMachine::Plugin::Base
 
   def load_config
     JSON.load(open(File.expand_path(CONFIG_FILE))).symbolize_keys
+  end
+
+  def get_hooks(conf)
+    if conf.include? "hooks"
+      Hash.new.tap do |hooks|
+        ["success", "fail"].each do |st|
+          hooks[st] = Hook.new(conf["hooks"][st])
+        end
+      end
+    else
+      Hash.new { |k| Hook.new(nil) }
+    end
   end
 
 end
