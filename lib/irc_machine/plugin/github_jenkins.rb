@@ -54,8 +54,20 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
     super(*args)
   end
 
-  def recieve_line(line)
-    if line =~ build_pattern("rebuild ([^ /])/(\S+)")
+  def receive_line(line)
+    if line =~ /^:(\S+)!\S+ PRIVMSG (#+\S+) :#{session.state.nick}:? build (\S+)$/
+      nick, chan, buildspec = $1, $2, $3
+      repo, ref = buildspec.split(?/, 2)
+      if project = @projects[repo]
+        if ref.length < 7
+          session.msg chan, "#{nick}: at least 7 chars of the ref are required"
+        else
+          trigger_adhoc_build(project, ref, :nick => nick, :repo => repo)
+        end
+      else
+        session.msg chan, "#{nick}: No projects matching #{repo}"
+      end
+    elsif line =~ build_pattern("rebuild ([^ /])/(\S+)")
       nick, chan, repo, branch = $1, $2, $3, $4
 
       # Find the most recent build that matches repo and branch
@@ -130,7 +142,11 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
     commit = ::IrcMachine::Models::GithubNotification.new(request.body.read)
 
     if project = @projects[commit.repo_name]
-      trigger_build(project, commit)
+      if commit.after == "0000000000000000000000000000000000000000"
+        notify "Not building deleted branch #{commit.repo_name}/#{commit.branch}"
+      else
+        trigger_build(project, commit)
+      end
     else
       not_found
     end
@@ -141,6 +157,22 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
   end
 
 private
+
+  def trigger_adhoc_build(project, ref, opts={})
+    commit = OpenStruct.new({
+      :repository => OpenStruct.new({ :name => opts[:repo] }),
+      :repo_name => opts[:repo],
+      :branch => ref,
+      :before => "[adhoc]",
+      :after  => ref,
+      :commits => [{"author" => OpenStruct.new({ :nick => opts[:nick] })}],
+      # Hax to ensure the requester is notified
+      :authors => [OpenStruct.new({ :nick => opts[:nick] })],
+    })
+    if trigger_build(project, commit) && opts[:chan]
+      session.msg opts[:chan], "Build of #{opts[:repo]}/#{ref} successfully queued"
+    end
+  end
 
   def trigger_build(project, commit)
     uri = URI(project.builder_url)
@@ -165,7 +197,10 @@ private
   end
 
   def notify_privmsg(commit, build, status)
-    session.msg commit.pusher, "Jenkins build of #{commit.repo_name.irc_bold}/#{commit.branch.irc_bold} has #{colorise(status)}: #{build.full_url}console"
+    pusher = commit.pusher
+    unless pusher.nil?
+      session.msg commit.pusher, "Jenkins build of #{commit.repo_name.irc_bold}/#{commit.branch.irc_bold} has #{colorise(status)}: #{build.full_url}console"
+    end
   end
 
   # TODO build model
