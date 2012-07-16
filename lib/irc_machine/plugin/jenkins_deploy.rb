@@ -42,6 +42,10 @@ class MutexApp
     @last_state = :disabled
   end
 
+  def disabled?
+    @deploying && @last_state == :disabled
+  end
+
   def reset!
     @deploying = false
     @last_state = :initial
@@ -213,6 +217,11 @@ class IrcMachine::Plugin::JenkinsNotify < IrcMachine::Plugin::Base
 
     return unless branch == "master"
     return unless (app = @apps[repo])
+
+    if app.disabled?
+      app.reset!
+      callback.call("Reset #{app.name} because of successful build of master")
+    end
 
     if app.auto_deploy
       callback.call("Attempting automatic deploy of #{app.name}")
