@@ -33,6 +33,11 @@ module IrcMachine
         "Build of #{commit.repo_name.irc_bold}/#{commit.branch.irc_bold} was a #{build_status} #{compare_prefix}#{commit.before[0..6]}...#{commit.after[0..6]} in #{build_time.irc_bold}s PING #{users_to_notify.join(" ")}"
       end
 
+      def status
+        # Adhoc builds will toast this
+        @status ||= GitHubCommitStatus.from_sha commit.after
+      end
+
     end
 
   end

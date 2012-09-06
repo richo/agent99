@@ -48,8 +48,9 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
     route(:post, %r{^/github/jenkins$}, :build_branch)
     route(:post, %r{^/github/jenkins_status$}, :jenkins_status)
     route(:post, %r{^/github/notice$}, :rest_notice)
+    route(:post, %r{^/github/deprecation$}, :rest_notice)
     route(:get, %r{^/status/all$}, :all_builds_status)
-    route(:get, %r{^/status/([a-f0-9]+)$}, :build_status)
+    route(:get, %r{^/status/\w+/([a-f0-9]+)$}, :build_status)
 
     initialize_jenkins_notifier
     super(*args)
@@ -100,10 +101,12 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
   end
 
   def build_status(request, match)
-    if @builds.include?(match[1])
-      ok @builds[match[1]].status
-    else
-      ok "UNKNOWN"
+    if project = @projects[match[1]]
+      status = GitHubCommitStatus.new(
+        :user => project.user,
+        :project => project.project
+      )
+      ok status.for_sha(match[2])
     end
   end
 
@@ -115,6 +118,7 @@ class IrcMachine::Plugin::GithubJenkins < IrcMachine::Plugin::Base
     @notifier = ::IrcMachine::Routers::JenkinsRouter.new(@commits) do |endpoint|
       endpoint.on :started do |commit, build|#{{{ Started
         commit.start_time = Time.now.to_i
+        commit.project
         # TODO
         notify_privmsg(commit, build, "STARTED")
       end #}}}
@@ -229,7 +233,6 @@ private
     end
   end
 
-
   def format_msg(commit, build)
     status = colorise(build.status)
     commit.notification_format(status)
@@ -238,4 +241,5 @@ private
   def build_pattern(text)
     /^:(\S+)!\S+ PRIVMSG (#+\S+) :#{session.state.nick}:? #{text}$/
   end
+
 end
