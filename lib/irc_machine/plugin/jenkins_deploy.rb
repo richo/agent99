@@ -1,6 +1,6 @@
 require 'net/http'
 class MutexApp
-  attr_reader :name, :last_user, :reason
+  attr_reader :name, :last_user
   attr_accessor :deploy_url, :auto_deploy
 
   def initialize(name)
@@ -20,7 +20,7 @@ class MutexApp
     # Reactor model, this is safe
     if @deploying
       if @last_state == :disabled
-        return "Deploy for #{name} is currently disabled"
+        return "Deploy for #{name} is currently disabled because #{reason}"
       else
         return "Deploy for #{name} in progress by #{last_user}" if @deploying
       end
@@ -83,6 +83,10 @@ class MutexApp
     end
   end
 
+  def reason
+    @reason || "of reasons"
+  end
+
 end
 
 class SymbolicHash < Hash
@@ -140,17 +144,17 @@ class IrcMachine::Plugin::JenkinsNotify < IrcMachine::Plugin::Base
         deploy(app, user, channel)
       end
 
-    elsif line =~ /^:(\S+)!\S+ PRIVMSG (#+\S+) :#{session.state.nick}:? disable (\S+)( .*)?$/
+    elsif line =~ /^:(\S+)!\S+ PRIVMSG (#+\S+) :#{session.state.nick}:? disable (\S+)?( .*)?$/
       user = $1.chomp
       channel = $2.chomp
       repo = $3.chomp
-      reason = $4.chomp
+      reason = $4.chomp rescue nil
       app = apps[repo.to_sym]
       if app.nil?
         session.msg channel, "Unknown repo: #{repo}"
       else
         app.disable!(:reason => reason)
-        session.msg channel, "#{repo} has been disabled"
+        session.msg channel, "#{repo} has been disabled because #{app.reason}"
       end
     elsif line =~ /^:(\S+)!\S+ PRIVMSG (#+\S+) :#{session.state.nick}:? reset (\S+)$/
       user = $1.chomp
@@ -173,7 +177,7 @@ class IrcMachine::Plugin::JenkinsNotify < IrcMachine::Plugin::Base
         session.msg channel, "Unknown repo: #{repo}"
       else
         if app.deploying?
-          session.msg channel, "#{user}: #{repo} is currently #{app.last_state}; caused by #{app.last_user} because #{app.reason || "of reasons"}"
+          session.msg channel, "#{user}: #{repo} is currently #{app.last_state}; caused by #{app.last_user} because #{app.reason}"
         else
           session.msg channel, "#{user}: #{repo} is not currently being deployed"
         end
