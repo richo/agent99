@@ -8,6 +8,10 @@ if which rbenv > /dev/null 2>&1; then
     export RBENV_VERSION=`cat .rbenv-version`
     exec_cmd="rbenv exec"
 fi
+echo "--"
+env
+echo "--"
+pwd
 $exec_cmd bundle config
 $exec_cmd bundle check
 $exec_cmd bundle install --path .bundle
