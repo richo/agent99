@@ -8,6 +8,8 @@ if which rbenv > /dev/null 2>&1; then
     export RBENV_VERSION=`cat .rbenv-version`
     exec_cmd="rbenv exec"
 fi
+
+export BUNDLE_GEMFILE=`pwd`/Gemfile
 echo "--"
 env
 echo "--"
