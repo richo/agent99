@@ -10,4 +10,13 @@ describe "Agent99::Models::JuiciProject" do
     project.priorities["wip/thing"].should == 15
     project.priorities["production"].should be_nil
   end
+
+  it "Should interpret regexes in priority" do
+    config = { "priorities" => { "master" => 0, "/^wip//" => 20 } }
+
+    project = IrcMachine::Models::JuiciProject.new("test", config)
+    project.priorities["wip/thing"].should == 20
+    project.priorities["master"].should == 0
+    project.priorities["notfound"].should be_nil
+  end
 end
