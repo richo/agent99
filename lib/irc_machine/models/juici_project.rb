@@ -9,7 +9,7 @@ class IrcMachine::Models::JuiciProject
     @config = config || {}
   end
 
-  def build_script
+  def build_script(action)
     config["build_script"] || <<-EOS #{{{
 #!/bin/sh
 #
@@ -21,7 +21,7 @@ git fetch origin
 
 git checkout -fq $SHA1
 
-./script/cibuild
+./script/ci#{action}
 EOS
 #}}}
   end
@@ -30,7 +30,7 @@ EOS
     URI.encode_www_form({ #{{{
       "project" => name,
       "environment" => (opts[:environment] || {}).to_json,
-      "command" => build_script,
+      "command" => build_script(opts[:action] || "build"),
       "priority" => opts[:priority] || 1,
       "callbacks" => (opts[:callbacks] || []).to_json,
       "title" => opts[:title]
