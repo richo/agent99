@@ -10,6 +10,9 @@ module IrcMachine
       @options = OpenStruct.new(options)
       @state = State.new
       @router = HttpRouter.new(self)
+
+      # XXX
+      String.enable_color! if options.enable_color
       load_plugins!
     end
 

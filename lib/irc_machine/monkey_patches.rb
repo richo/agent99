@@ -14,22 +14,46 @@ end
 
 class String
   def irc_bold
-    "#{0x02.chr}#{self}#{0x0F.chr}"
+    self
   end
 
   def irc_green
-    "#{0x03.chr}3#{self}#{0x03.chr}"
+    self
   end
 
   def irc_red
-    "#{0x03.chr}4#{self}#{0x03.chr}"
+    self
   end
 
   def irc_yellow
-    "#{0x03.chr}8#{self}#{0x03.chr}"
+    self
   end
 
   def irc_cyan
-    "#{0x03.chr}10#{self}#{0x03.chr}"
+    self
+  end
+
+  def self.enable_color!
+    self.class_exec do
+      def irc_bold
+        "#{0x02.chr}#{self}#{0x0F.chr}"
+      end
+
+      def irc_green
+        "#{0x03.chr}3#{self}#{0x03.chr}"
+      end
+
+      def irc_red
+        "#{0x03.chr}4#{self}#{0x03.chr}"
+      end
+
+      def irc_yellow
+        "#{0x03.chr}8#{self}#{0x03.chr}"
+      end
+
+      def irc_cyan
+        "#{0x03.chr}10#{self}#{0x03.chr}"
+      end
+    end
   end
 end
