@@ -20,14 +20,13 @@ class IrcMachine::Plugin::TramTracker < IrcMachine::Plugin::Base
 
   def receive_line(line)
     if line =~ /^:\S+ PRIVMSG (#+\S+) :#{session.state.nick}:? when is the next tram\??$/
-      c = []
       times = departure_times
-      callcc do |cc|
-        c << cc
+      send_msg = Proc.new do
+        session.msg $1, times.unshift
+        EM.next_tick(send_msg) unless times.empty?
       end
-      return if times.empty?
-      session.msg $1, times.unshift
-      EM.next_tick(c[0])
+
+      EM.next_tick(send_msg) unless times.empty?
     end
   end
 

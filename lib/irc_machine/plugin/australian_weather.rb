@@ -15,14 +15,13 @@ class IrcMachine::Plugin::AustralianWeather < IrcMachine::Plugin::Base
 
   def receive_line(line)
     if line =~ /^:\S+ PRIVMSG (#+\S+) :#{session.state.nick}:? how is the weather\??$/
-      c = []
       report = weather_report
-      callcc do |cc|
-        c << cc
+      send_msg = Proc.new do
+        session.msg $1, report.unshift
+        EM.next_tick(send_msg) unless report.empty?
       end
-      return if report.empty?
-      session.msg $1, report.unshift
-      EM.next_tick(c[0])
+
+      EM.next_tick(send_msg) unless report.empty?
     end
   end
 
