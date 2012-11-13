@@ -1,6 +1,7 @@
 require 'irc_machine'
 require 'rest_client'
 require 'nokogiri'
+require 'continuation'
 
 # Configuration:
 #
@@ -19,11 +20,14 @@ class IrcMachine::Plugin::TramTracker < IrcMachine::Plugin::Base
 
   def receive_line(line)
     if line =~ /^:\S+ PRIVMSG (#+\S+) :#{session.state.nick}:? when is the next tram\??$/
-      departure_times.each { |message|
-        session.msg $1, message
-        # Forgive me my `sleep`s, as I forgive those who `sleep` against me
-        sleep(0.05)
-      }
+      c = []
+      times = departure_times
+      callcc do |cc|
+        c << cc
+      end
+      return if times.empty?
+      session.msg $1, times.unshift
+      EM.next_tick(c[0])
     end
   end
 
