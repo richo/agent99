@@ -81,6 +81,12 @@ module IrcMachine
             @settings ||= load_config
           end
         end
+        if self.class.const_defined?(:REQUIRED_KEYS)
+          keys = settings.keys
+          REQUIRED_KEYS.each do |k|
+            raise "#{self.class}: Config is missing required key: #{k}" unless keys.include? k
+          end
+        end
       end
 
       def load_config
