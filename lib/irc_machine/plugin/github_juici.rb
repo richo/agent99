@@ -60,8 +60,14 @@ class IrcMachine::Plugin::GithubJuici < IrcMachine::Plugin::Base
     route(:post, callback[:path],
       status_callback(:project => project, :commit => commit, :opts => opts))
 
+    callbacks = []
+    callbacks << callback[:url]
+    if deploy_callback = plugin_send(:JuiciDeploy, :deploy_callback_url, project, commit)
+      callbacks << deploy_callback
+    end
+
     http.start do |h|
-      h.post("/builds/new", project.build_payload(:environment => opts[:environment], :callbacks => [callback[:url]], :title => title, :priority => priority))
+      h.post("/builds/new", project.build_payload(:environment => opts[:environment], :callbacks => callbacks, :title => title, :priority => priority))
     end
   end
 
