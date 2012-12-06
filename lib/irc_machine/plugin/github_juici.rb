@@ -25,8 +25,10 @@ require 'juici/interface'
 #   "callback_base" : "http://agent99.example.com"
 # }
 
-class IrcMachine::Plugin::GithubJuici < IrcMachine::Plugin::Base
+# TODO Should the parts of this which interact with juici be extracted into something that can be used from places other than github callbacks?
 
+class IrcMachine::Plugin::GithubJuici < IrcMachine::Plugin::Base
+  include IrcMachine::CallbackUrlGenerator
   CONFIG_FILE = "github_juici.json"
 
   attr_reader :projects
@@ -75,10 +77,6 @@ class IrcMachine::Plugin::GithubJuici < IrcMachine::Plugin::Base
     projects[p] ||= IrcMachine::Models::JuiciProject.new(p, project_settings[p])
   end
 
-  def juici_url
-    settings["juici_url"]
-  end
-
   def project_settings
     settings["projects"] || {}
   end
@@ -89,13 +87,8 @@ class IrcMachine::Plugin::GithubJuici < IrcMachine::Plugin::Base
     end
   end
 
-  def new_callback
-    callback = {}
-    callback[:url] = URI(settings["callback_base"]).tap do |uri|
-      callback[:path] = "/juici/status/#{@uuid.generate}"
-      uri.path = callback[:path]
-    end
-    callback
+  def callback_path
+    '/juici/status'
   end
 
   def status_callback(data={})

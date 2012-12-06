@@ -26,7 +26,7 @@ git fetch origin
 
 git checkout -fq $SHA1
 
-./script/cibuild
+#{command}
 EOS
 #}}}
   end
@@ -44,6 +44,14 @@ EOS
 
   def priorities
     config["priorities"] || {}
+  end
+
+  def gitrepo
+    config["gitrepo"] || name
+  end
+
+  def command
+    config["command"] || "./script/cibuild"
   end
 
 end
