@@ -50,9 +50,7 @@ module IrcMachine
         when :websocket
           events[:em_ready] << Proc.new {
             opts = { :host => '0.0.0.0', :port => port }
-            EventMachine::start_server(opts[:host], opts[:port], EventMachine::WebSocket::Connection, opts) do |c|
-              callback.call(c)
-            end
+            EventMachine::WebSocket.run(opts, &callback)
           }
         end
       end
