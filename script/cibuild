@@ -8,5 +8,6 @@ if which rbenv > /dev/null 2>&1; then
     export RBENV_VERSION=`cat .rbenv-version`
     exec_cmd="rbenv exec"
 fi
-$exec_cmd bundle install
-$exec_cmd bundle exec rake spec
+export RBENV_DEBUG=1
+rbenv exec bundle install 2>&1 | tee bundle_debug.log
+rbenv exec gem env 2>&1 | tee gem_debug.log
