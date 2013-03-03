@@ -18,6 +18,10 @@ module IrcMachine
         data["status"]
       end
 
+      def warnings
+        data["warnings"]
+      end
+
       def url
         "#{opts[:juici_url]}#{data["url"]}"
       end
