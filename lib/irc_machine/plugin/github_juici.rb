@@ -64,8 +64,11 @@ class IrcMachine::Plugin::GithubJuici < IrcMachine::Plugin::Base
   end
 
   def env_for(project, commit)
+    callback = new_callback[:path]
+    route(:post, callback[:path], notification_callback("#{project.name}: "))
     {"SHA1" => commit.after, "ref" => commit.ref, "PREV_SHA1" => commit.before}.tap do |env|
       env["DISABLED"] = "true" if @disabled_projects[project.name]
+      env["NOTIFICATION_URL"] = callback[:url]
     end
   end
 
@@ -126,6 +129,12 @@ class IrcMachine::Plugin::GithubJuici < IrcMachine::Plugin::Base
       uri.path = callback[:path]
     end
     callback
+  end
+
+  def notification_callback(prefix="")
+    lambda { |request, match|
+      notify "#{prefix}#{request.body.read}"
+    }
   end
 
   def status_callback(data={})
