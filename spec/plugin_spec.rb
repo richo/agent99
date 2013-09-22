@@ -1,5 +1,12 @@
 require File.join(File.dirname(__FILE__), "/spec_helper")
 
+class IrcMachine::Session
+  def plugins
+    @plugins
+  end
+end
+
+
 describe "Agent99::Plugin" do
   # Message passing in agent99 is dependant on the actual classname of the
   # plugin. This we can't go nuts with mocks
@@ -17,12 +24,6 @@ describe "Agent99::Plugin" do
       "plugins" => ["Plugin1", "Plugin2"]
     }
 
-    class IrcMachine::Session
-      def plugins
-        @plugins
-      end
-    end
-
     session = IrcMachine::Session.new(options)
     session.plugins.length.should == 3
     # Test we can get plugins
@@ -30,5 +31,23 @@ describe "Agent99::Plugin" do
     session.get_plugin(:Plugin1).expects(:test_method).with("rawp")
     session.get_plugin(:Plugin2).send_to_1
   end
+
+  it "Should return true if the message was delivered" do
+    class IrcMachine::Plugin::ExistsPlugin < IrcMachine::Plugin::Base
+    end
+
+    class IrcMachine::Plugin::SenderPlugin < IrcMachine::Plugin::Base
+    end
+
+    options = {
+      "plugins" => ["ExistsPlugin", "SenderPlugin"]
+    }
+
+    session = IrcMachine::Session.new(options)
+    expect(session
+
+
+  end
+
 end
 

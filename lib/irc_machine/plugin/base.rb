@@ -60,6 +60,9 @@ module IrcMachine
       def plugin_send(plugin, sym, *args)
         if (p = session.get_plugin plugin)
           p.send(sym, *args)
+          true
+        else
+          false
         end
       end
 
