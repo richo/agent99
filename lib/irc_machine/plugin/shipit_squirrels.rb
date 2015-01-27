@@ -17,7 +17,6 @@ class IrcMachine::Plugin::ShipItSquirrels < IrcMachine::Plugin::Base
     http://99designs-shipit-squirrels.s3-website-us-east-1.amazonaws.com/4145890585_db459aafd6.jpg
     http://99designs-shipit-squirrels.s3-website-us-east-1.amazonaws.com/75xBpvk.jpg
     http://99designs-shipit-squirrels.s3-website-us-east-1.amazonaws.com/AfTLsO8.jpg
-    http://99designs-shipit-squirrels.s3-website-us-east-1.amazonaws.com/H8uXLwS.jpg
     http://99designs-shipit-squirrels.s3-website-us-east-1.amazonaws.com/HRY8DWi.jpg
     http://99designs-shipit-squirrels.s3-website-us-east-1.amazonaws.com/HUBdnqf.jpg
     http://99designs-shipit-squirrels.s3-website-us-east-1.amazonaws.com/L1pMLOU.jpg
