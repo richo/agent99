@@ -9,6 +9,7 @@ class IrcMachine::Plugin::ProgrammingHelper < IrcMachine::Plugin::Base
                     'Use Mongo',
                     'Use babashka',
                     'Have you tried using threads?',
+                    'Maybe walk into a whiteboard?',
                     'https://github.com/garybernhardt/base',
                     'wat r u doin',
                     'sounds like a devops problem',
